@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Состояние приложения
     let username = localStorage.getItem('discordCloneUsername') || '';
+    const socket = io(); // Инициализация Socket.IO в начале
 
     // Элементы DOM
     const usernameModal = document.getElementById('username-modal');
@@ -36,9 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDeafened = false;
     let currentAudioElements = {};
     let users = {}; // Хранилище пользователей для быстрого доступа
-
-    // Инициализация Socket.IO
-    const socket = io();
 
     // Обработчики событий
     usernameSubmit.addEventListener('click', setUsername);
