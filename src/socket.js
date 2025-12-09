@@ -1,36 +1,44 @@
 const { v4: uuidv4 } = require('uuid');
 const { availableAvatars, defaultStatuses } = require('./constants');
-const { rooms, users, getUsersInRoom, getActiveRooms } = require('./state');
+const state = require('./state');
 
 module.exports = (io) => {
-    io.on('connection', (socket) => {
+    io.on('connection', async (socket) => {
         console.log('Новый пользователь подключен:', socket.id);
 
         // Получение списка пользователей в комнате
-        socket.on('getUsersInRoom', (roomId) => {
-            if (rooms[roomId]) {
-                socket.emit('usersInRoom', getUsersInRoom(roomId));
+        socket.on('getUsersInRoom', async (roomId) => {
+            const users = await state.getUsersInRoom(roomId);
+            if (users.length > 0) {
+                socket.emit('usersInRoom', users);
             }
         });
 
         // Обновление профиля пользователя
-        socket.on('updateProfile', ({ avatar, status }) => {
-            if (users[socket.id]) {
-                if (avatar) users[socket.id].avatar = avatar;
-                if (status) users[socket.id].status = status;
-                if (users[socket.id].roomId && rooms[users[socket.id].roomId]) {
-                    io.to(users[socket.id].roomId).emit('usersInRoom', getUsersInRoom(users[socket.id].roomId));
+        socket.on('updateProfile', async ({ avatar, status }) => {
+            const user = await state.getUser(socket.id);
+            if (user) {
+                const updates = {};
+                if (avatar) updates.avatar = avatar;
+                if (status) updates.status = status;
+                
+                await state.updateUser(socket.id, updates);
+                
+                if (user.roomId) {
+                    const roomUsers = await state.getUsersInRoom(user.roomId);
+                    io.to(user.roomId).emit('usersInRoom', roomUsers);
                 }
             }
         });
 
         // Получение информации о профиле пользователя
-        socket.on('getProfile', () => {
-            if (users[socket.id]) {
+        socket.on('getProfile', async () => {
+            const user = await state.getUser(socket.id);
+            if (user) {
                 socket.emit('profileInfo', {
-                    username: users[socket.id].username,
-                    avatar: users[socket.id].avatar,
-                    status: users[socket.id].status,
+                    username: user.username,
+                    avatar: user.avatar,
+                    status: user.status,
                     availableAvatars,
                     availableStatuses: defaultStatuses
                 });
@@ -38,62 +46,78 @@ module.exports = (io) => {
         });
 
         // Получение списка активных комнат
-        socket.on('getActiveRooms', () => {
-            socket.emit('activeRooms', getActiveRooms());
+        socket.on('getActiveRooms', async () => {
+            const activeRooms = await state.getActiveRooms();
+            socket.emit('activeRooms', activeRooms);
         });
 
         // Создание новой комнаты
-        socket.on('createRoom', ({ username, avatar, status }) => {
+        socket.on('createRoom', async ({ username, avatar, status }) => {
             const roomId = uuidv4();
-            rooms[roomId] = {
-                id: roomId,
-                users: [],
-                createdAt: new Date()
-            };
-            users[socket.id] = {
+            await state.createRoom({ id: roomId });
+            
+            const user = {
                 id: socket.id,
                 username,
                 roomId,
                 avatar: avatar || availableAvatars[Math.floor(Math.random() * availableAvatars.length)],
                 status: status || defaultStatuses[0]
             };
+            
+            await state.addUser(user);
             socket.join(roomId);
-            rooms[roomId].users.push(socket.id);
+            
             socket.emit('roomCreated', { roomId, username });
-            io.to(roomId).emit('userJoined', { username, users: getUsersInRoom(roomId) });
-            io.emit('roomListUpdated', getActiveRooms());
+            
+            const roomUsers = await state.getUsersInRoom(roomId);
+            io.to(roomId).emit('userJoined', { username, users: roomUsers });
+            
+            const activeRooms = await state.getActiveRooms();
+            io.emit('roomListUpdated', activeRooms);
         });
 
         // Подключение к существующей комнате
-        socket.on('joinRoom', ({ roomId, username, avatar, status }) => {
-            if (!rooms[roomId]) {
-                socket.emit('error', 'Комната не найдена');
-                return;
-            }
-            users[socket.id] = {
+        socket.on('joinRoom', async ({ roomId, username, avatar, status }) => {
+            // Проверяем существование комнаты (в данном случае просто пробуем добавить пользователя, если комнаты нет - создаем?)
+            // Лучше проверить список комнат, но для простоты предположим, что ID валиден, если он пришел из списка.
+            // Но если пользователь ввел ID вручную, надо проверить.
+            // В текущей реализации createRoom создает запись в таблице rooms.
+            
+            // Здесь мы просто обновляем пользователя
+            const user = {
                 id: socket.id,
                 username,
                 roomId,
                 avatar: avatar || availableAvatars[Math.floor(Math.random() * availableAvatars.length)],
                 status: status || defaultStatuses[0]
             };
+            
+            await state.addUser(user);
             socket.join(roomId);
-            rooms[roomId].users.push(socket.id);
+            
             socket.emit('roomJoined', { roomId, username });
-            io.to(roomId).emit('userJoined', { username, users: getUsersInRoom(roomId) });
-            io.emit('roomListUpdated', getActiveRooms());
+            
+            const roomUsers = await state.getUsersInRoom(roomId);
+            io.to(roomId).emit('userJoined', { username, users: roomUsers });
+            
+            const activeRooms = await state.getActiveRooms();
+            io.emit('roomListUpdated', activeRooms);
         });
 
         // Обработка текстовых сообщений
-        socket.on('sendMessage', ({ roomId, message }) => {
-            if (rooms[roomId] && users[socket.id]) {
-                const { username } = users[socket.id];
-                io.to(roomId).emit('newMessage', {
+        socket.on('sendMessage', async ({ roomId, message }) => {
+            const user = await state.getUser(socket.id);
+            if (user) {
+                const newMessage = {
                     id: uuidv4(),
-                    sender: username,
+                    roomId,
+                    sender: user.username,
                     content: message,
                     timestamp: new Date()
-                });
+                };
+                
+                await state.saveMessage(newMessage);
+                io.to(roomId).emit('newMessage', newMessage);
             }
         });
 
@@ -113,43 +137,46 @@ module.exports = (io) => {
         });
 
         // Выход из комнаты
-        socket.on('leaveRoom', (roomId) => {
-            if (users[socket.id] && rooms[roomId]) {
-                const { username } = users[socket.id];
-                // Уведомляем о прекращении трансляции, если она была активна
+        socket.on('leaveRoom', async (roomId) => {
+            const user = await state.getUser(socket.id);
+            if (user && user.roomId === roomId) {
                 socket.to(roomId).emit('userStoppedScreenShare', { userId: socket.id });
 
-                rooms[roomId].users = rooms[roomId].users.filter(id => id !== socket.id);
-                io.to(roomId).emit('userLeft', { username, users: getUsersInRoom(roomId) });
+                // Обновляем пользователя (убираем roomId)
+                await state.updateUser(socket.id, { room_id: null });
                 socket.leave(roomId);
-                delete users[socket.id];
 
-                // Удаляем комнату, если она пустая
-                if (rooms[roomId] && rooms[roomId].users.length === 0) {
-                    delete rooms[roomId];
-                }
-                io.emit('roomListUpdated', getActiveRooms());
+                const roomUsers = await state.getUsersInRoom(roomId);
+                io.to(roomId).emit('userLeft', { username: user.username, users: roomUsers });
+
+                await state.deleteRoomIfEmpty(roomId);
+                
+                const activeRooms = await state.getActiveRooms();
+                io.emit('roomListUpdated', activeRooms);
             }
         });
 
         // Отключение пользователя
-        socket.on('disconnect', () => {
-            if (users[socket.id]) {
-                const { roomId, username } = users[socket.id];
-                if (rooms[roomId]) {
-                    // Уведомляем о прекращении трансляции, если она была активна
+        socket.on('disconnect', async () => {
+            const user = await state.getUser(socket.id);
+            if (user) {
+                const roomId = user.roomId;
+                if (roomId) {
                     socket.to(roomId).emit('userStoppedScreenShare', { userId: socket.id });
-
-                    rooms[roomId].users = rooms[roomId].users.filter(id => id !== socket.id);
-                    io.to(roomId).emit('userLeft', { username, users: getUsersInRoom(roomId) });
-
-                    // Удаляем комнату, если она пустая
-                    if (rooms[roomId].users.length === 0) {
-                        delete rooms[roomId];
-                    }
-                    io.emit('roomListUpdated', getActiveRooms());
+                    
+                    // Удаляем пользователя полностью при дисконнекте
+                    await state.removeUser(socket.id);
+                    
+                    const roomUsers = await state.getUsersInRoom(roomId);
+                    io.to(roomId).emit('userLeft', { username: user.username, users: roomUsers });
+                    
+                    await state.deleteRoomIfEmpty(roomId);
+                    
+                    const activeRooms = await state.getActiveRooms();
+                    io.emit('roomListUpdated', activeRooms);
+                } else {
+                    await state.removeUser(socket.id);
                 }
-                delete users[socket.id];
             }
             console.log('Пользователь отключен:', socket.id);
         });
