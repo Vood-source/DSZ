@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Состояние приложения
+    let username = localStorage.getItem('discordCloneUsername') || '';
+
     // Элементы DOM
     const usernameModal = document.getElementById('username-modal');
     const roomModal = document.getElementById('room-modal');
@@ -26,9 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const deafenBtn = document.getElementById('deafen-btn');
     const leaveBtn = document.getElementById('leave-btn');
     const voiceChannelsElement = document.querySelector('.voice-channels');
-
-    // Состояние приложения
-    let username = localStorage.getItem('discordCloneUsername') || '';
     let roomId = '';
     let localStream = null;
     let peerConnections = {};
