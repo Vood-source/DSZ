@@ -33,14 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagesContainer = document.getElementById('messages-container');
     const messageInput = document.getElementById('message-input');
     const sendMessageBtn = document.getElementById('send-message-btn');
+    const videoContainer = document.getElementById('video-container');
+    const screenShareBtn = document.getElementById('screen-share-btn');
     let roomId = '';
     let localStream = null;
+    let localScreenStream = null;
     let peerConnections = {};
+    let screenPeerConnections = {};
     let isMuted = false;
     let isDeafened = false;
     let currentAudioElements = {};
     let users = {}; // Хранилище пользователей для быстрого доступа
     let messages = []; // Хранилище сообщений для текущей комнаты
+    let videoElements = {}; // Хранилище видео элементов
 
     // Обработчики событий
     usernameSubmit.addEventListener('click', setUsername);
@@ -62,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
+    screenShareBtn.addEventListener('click', toggleScreenShare);
 
     // Обработка получения списка пользователей в комнате
     socket.on('usersInRoom', (roomUsers) => {
@@ -174,15 +180,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Обработка сигналов WebRTC
-    socket.on('webrtcSignal', async ({ from, signal }) => {
-        if (!peerConnections[from]) {
-            createPeerConnection(from);
-        }
-
-        try {
-            await peerConnections[from].signal(signal);
-        } catch (err) {
-            console.error('Ошибка обработки сигнала:', err);
+    socket.on('webrtcSignal', async ({ from, signal, type }) => {
+        if (type === 'screen') {
+            if (!screenPeerConnections[from]) {
+                createScreenPeerConnection(from);
+            }
+            try {
+                await screenPeerConnections[from].signal(signal);
+            } catch (err) {
+                console.error('Ошибка обработки сигнала экрана:', err);
+            }
+        } else {
+            if (!peerConnections[from]) {
+                createPeerConnection(from);
+            }
+            try {
+                await peerConnections[from].signal(signal);
+            } catch (err) {
+                console.error('Ошибка обработки сигнала:', err);
+            }
         }
     });
 
@@ -222,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Настройка WebRTC
     async function setupWebRTC() {
         try {
+            // Запрашиваем доступ только к микрофону (видео не запрашиваем по умолчанию)
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             muteBtn.textContent = isMuted ? '🎤 Включить микрофон' : '🎤 Выключить микрофон';
             muteBtn.disabled = false;
@@ -238,7 +255,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Создание нового peer connection
+    // Переключение экранной трансляции
+    async function toggleScreenShare() {
+        if (localScreenStream) {
+            // Останавливаем трансляцию
+            stopScreenShare();
+        } else {
+            // Начинаем трансляцию
+            try {
+                localScreenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true
+                });
+
+                // Обновляем UI
+                screenShareBtn.classList.add('active');
+                screenShareBtn.textContent = '🖥️ Остановить трансляцию';
+
+                // Создаем peer connections для всех пользователей в комнате
+                const roomUsers = Object.values(users).filter(u => u.id !== socket.id);
+                roomUsers.forEach(user => {
+                    if (!screenPeerConnections[user.id]) {
+                        createScreenPeerConnection(user.id);
+                    }
+                });
+
+                // Добавляем наш собственный экран в UI
+                createVideoElement(socket.id + '_screen', localScreenStream, true);
+
+            } catch (err) {
+                console.error('Ошибка доступа к экрану:', err);
+                if (err.name !== 'NotAllowedError') {
+                    alert('Не удалось получить доступ к экрану. Проверьте разрешения.');
+                }
+            }
+        }
+    }
+
+    // Остановка экранной трансляции
+    function stopScreenShare() {
+        if (localScreenStream) {
+            localScreenStream.getTracks().forEach(track => track.stop());
+            localScreenStream = null;
+        }
+
+        Object.values(screenPeerConnections).forEach(pc => pc.destroy());
+        screenPeerConnections = {};
+
+        // Удаляем наш экран из UI
+        deleteVideoElement(socket.id + '_screen');
+
+        // Обновляем UI
+        screenShareBtn.classList.remove('active');
+        screenShareBtn.textContent = '🖥️ Транслировать экран';
+    }
+
+    // Создание нового peer connection для аудио/видео
     function createPeerConnection(userId) {
         const peerConnection = new SimplePeer({
             initiator: socket.id > userId,
@@ -247,16 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         peerConnection.on('signal', signal => {
-            socket.emit('webrtcSignal', { to: userId, signal });
+            socket.emit('webrtcSignal', { to: userId, signal, type: 'media' });
         });
 
         peerConnection.on('stream', stream => {
-            // Создаем аудио элемент для воспроизведения звука
-            const audioElement = document.createElement('audio');
-            audioElement.srcObject = stream;
-            audioElement.autoplay = true;
-            audioElement.muted = isDeafened;
-            currentAudioElements[userId] = audioElement;
+            // Проверяем, есть ли в потоке видео треки (камера или экран)
+            const videoTracks = stream.getVideoTracks();
+            if (videoTracks.length > 0) {
+                // Это видео поток
+                createVideoElement(userId, stream, false);
+            } else {
+                // Это аудио поток
+                const audioElement = document.createElement('audio');
+                audioElement.srcObject = stream;
+                audioElement.autoplay = true;
+                audioElement.muted = isDeafened;
+                currentAudioElements[userId] = audioElement;
+            }
 
             // Обновляем индикатор активности
             updateUserAudioIndicator(userId, true);
@@ -274,11 +353,96 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentAudioElements[userId]) {
                 delete currentAudioElements[userId];
             }
+            if (videoElements[userId]) {
+                deleteVideoElement(userId);
+            }
             // Обновляем индикатор активности
             updateUserAudioIndicator(userId, false);
         });
 
         peerConnections[userId] = peerConnection;
+    }
+
+    // Создание нового peer connection для экранной трансляции
+    function createScreenPeerConnection(userId) {
+        const peerConnection = new SimplePeer({
+            initiator: socket.id > userId,
+            trickle: false,
+            stream: localScreenStream
+        });
+
+        peerConnection.on('signal', signal => {
+            socket.emit('webrtcSignal', { to: userId, signal, type: 'screen' });
+        });
+
+        peerConnection.on('stream', stream => {
+            // Это экранный поток
+            createVideoElement(userId, stream, true);
+        });
+
+        peerConnection.on('error', err => {
+            console.error('Ошибка screen peer connection:', err);
+        });
+
+        peerConnection.on('close', () => {
+            console.log('Screen peer connection закрыто');
+            if (screenPeerConnections[userId]) {
+                delete screenPeerConnections[userId];
+            }
+            if (videoElements[userId + '_screen']) {
+                deleteVideoElement(userId + '_screen');
+            }
+        });
+
+        screenPeerConnections[userId] = peerConnection;
+    }
+
+    // Создание видео элемента
+    function createVideoElement(userId, stream, isScreen = false) {
+        const videoWrapper = document.createElement('div');
+        videoWrapper.className = 'video-wrapper';
+
+        const videoElement = document.createElement('video');
+        videoElement.className = 'video-element';
+        videoElement.srcObject = stream;
+        videoElement.autoplay = true;
+        videoElement.playsInline = true;
+
+        const label = document.createElement('div');
+        label.className = 'video-label';
+        label.textContent = isScreen ? 'Трансляция: ' + users[userId]?.username : users[userId]?.username || 'Пользователь';
+
+        videoWrapper.appendChild(videoElement);
+        videoWrapper.appendChild(label);
+
+        if (isScreen) {
+            const screenIndicator = document.createElement('div');
+            screenIndicator.className = 'screen-share-indicator';
+            screenIndicator.textContent = 'ЭКРАН';
+            videoWrapper.appendChild(screenIndicator);
+
+            // Сохраняем с суффиксом _screen для идентификации
+            videoElements[userId + '_screen'] = videoWrapper;
+        } else {
+            videoElements[userId] = videoWrapper;
+        }
+
+        videoContainer.appendChild(videoWrapper);
+
+        // Обработка окончания потока
+        stream.getVideoTracks().forEach(track => {
+            track.onended = () => {
+                deleteVideoElement(isScreen ? userId + '_screen' : userId);
+            };
+        });
+    }
+
+    // Удаление видео элемента
+    function deleteVideoElement(key) {
+        if (videoElements[key]) {
+            videoContainer.removeChild(videoElements[key]);
+            delete videoElements[key];
+        }
     }
 
     // Переключение микрофона
@@ -384,11 +548,20 @@ document.addEventListener('DOMContentLoaded', () => {
             localStream = null;
         }
 
+        if (localScreenStream) {
+            localScreenStream.getTracks().forEach(track => track.stop());
+            localScreenStream = null;
+        }
+
         Object.values(peerConnections).forEach(pc => pc.destroy());
+        Object.values(screenPeerConnections).forEach(pc => pc.destroy());
         peerConnections = {};
+        screenPeerConnections = {};
         currentAudioElements = {};
         messages = []; // Очищаем сообщения при выходе из комнаты
         messagesContainer.innerHTML = '';
+        videoContainer.innerHTML = '';
+        videoElements = {};
 
         if (roomId) {
             socket.emit('leaveRoom', roomId);
@@ -398,6 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
         usersListElement.innerHTML = '';
         muteBtn.disabled = true;
         deafenBtn.disabled = true;
+        screenShareBtn.classList.remove('active');
+        screenShareBtn.textContent = '🖥️ Транслировать экран';
 
         // Запрашиваем обновленный список комнат
         socket.emit('getActiveRooms');
