@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+
     // Добавление пользователя в список
     function addUserToList(username, isLocal = false) {
         const userElement = document.createElement('div');
@@ -292,6 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 screenShareBtn.classList.add('active');
                 screenShareBtn.textContent = '🖥️ Остановить трансляцию';
 
+                // Сообщаем серверу о начале трансляции
+                socket.emit('startScreenShare', { roomId });
+
                 // Создаем peer connections для всех пользователей в комнате
                 const roomUsers = Object.values(users).filter(u => u.id !== socket.id);
                 roomUsers.forEach(user => {
@@ -325,6 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Удаляем наш экран из UI
         deleteVideoElement(socket.id + '_screen');
 
+        // Сообщаем серверу об остановке трансляции
+        if (roomId) {
+            socket.emit('stopScreenShare', { roomId });
+        }
+
         // Обновляем UI
         screenShareBtn.classList.remove('active');
         screenShareBtn.textContent = '🖥️ Транслировать экран';
@@ -346,8 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Проверяем, есть ли в потоке видео треки (камера или экран)
             const videoTracks = stream.getVideoTracks();
             if (videoTracks.length > 0) {
-                // Это видео поток
-                createVideoElement(userId, stream, false);
+                // Это видео поток (экранная трансляция другого пользователя)
+                createVideoElement(userId, stream, true);
             } else {
                 // Это аудио поток
                 const audioElement = document.createElement('audio');
@@ -376,11 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (videoElements[userId]) {
                 deleteVideoElement(userId);
             }
+            if (videoElements[userId + '_screen']) {
+                deleteVideoElement(userId + '_screen');
+            }
             // Обновляем индикатор активности
             updateUserAudioIndicator(userId, false);
         });
 
         peerConnections[userId] = peerConnection;
+
+        // Если у нас есть активная экранная трансляция, создаем отдельное соединение для нее
+        if (localScreenStream) {
+            createScreenPeerConnection(userId);
+        }
     }
 
     // Создание нового peer connection для экранной трансляции

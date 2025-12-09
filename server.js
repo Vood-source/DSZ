@@ -79,14 +79,27 @@ io.on('connection', (socket) => {
     });
 
     // Обработка сигналов WebRTC
-    socket.on('webrtcSignal', ({ to, signal }) => {
-        io.to(to).emit('webrtcSignal', { from: socket.id, signal });
+    socket.on('webrtcSignal', ({ to, signal, type }) => {
+        io.to(to).emit('webrtcSignal', { from: socket.id, signal, type });
+    });
+
+    // Обработка начала экранной трансляции
+    socket.on('startScreenShare', ({ roomId }) => {
+        socket.to(roomId).emit('userStartedScreenShare', { userId: socket.id });
+    });
+
+    // Обработка остановки экранной трансляции
+    socket.on('stopScreenShare', ({ roomId }) => {
+        socket.to(roomId).emit('userStoppedScreenShare', { userId: socket.id });
     });
 
     // Выход из комнаты
     socket.on('leaveRoom', (roomId) => {
         if (users[socket.id] && rooms[roomId]) {
             const { username } = users[socket.id];
+            // Уведомляем о прекращении трансляции, если она была активна
+            socket.to(roomId).emit('userStoppedScreenShare', { userId: socket.id });
+
             rooms[roomId].users = rooms[roomId].users.filter(id => id !== socket.id);
             io.to(roomId).emit('userLeft', { username, users: getUsersInRoom(roomId) });
             socket.leave(roomId);
@@ -105,6 +118,9 @@ io.on('connection', (socket) => {
         if (users[socket.id]) {
             const { roomId, username } = users[socket.id];
             if (rooms[roomId]) {
+                // Уведомляем о прекращении трансляции, если она была активна
+                socket.to(roomId).emit('userStoppedScreenShare', { userId: socket.id });
+
                 rooms[roomId].users = rooms[roomId].users.filter(id => id !== socket.id);
                 io.to(roomId).emit('userLeft', { username, users: getUsersInRoom(roomId) });
 
