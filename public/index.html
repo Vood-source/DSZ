@@ -99,6 +99,34 @@
         </div>
     </div>
 
+    <div class="modal hidden" id="profile-modal">
+        <div class="modal-content">
+            <h2>Редактировать профиль</h2>
+            <div class="profile-edit-section">
+                <div class="current-avatar-display">
+                    <div class="user-avatar-large" id="profile-selected-avatar">😊</div>
+                </div>
+                <h3>Выберите новый аватар</h3>
+                <div class="avatar-grid" id="profile-avatar-grid">
+                    <!-- Аватары будут загружены динамически -->
+                </div>
+
+                <h3>Статус</h3>
+                <select id="status-select">
+                    <option value="В сети">В сети</option>
+                    <option value="Не беспокоить">Не беспокоить</option>
+                    <option value="Отошел">Отошел</option>
+                    <option value="На связи">На связи</option>
+                    <option value="В игре">В игре</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button id="save-profile-btn">Сохранить</button>
+                <button id="cancel-profile-btn" class="cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.0/simplepeer.min.js"></script>
     <script type="module" src="js/main.js"></script>

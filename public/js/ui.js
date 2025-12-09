@@ -31,9 +31,9 @@ export const elements = {
     profilePreviewAvatar: document.getElementById('profile-preview-avatar'),
     profilePreviewUsername: document.getElementById('profile-preview-username'),
     profilePreviewStatus: document.getElementById('profile-preview-status'),
-    previewAvatar: document.getElementById('preview-avatar'),
-    previewStatus: document.getElementById('preview-status'),
-    previewUsername: document.getElementById('preview-username'),
+    previewAvatar: document.getElementById('profile-preview-avatar'),
+    previewStatus: document.getElementById('profile-preview-status'),
+    previewUsername: document.getElementById('profile-preview-username'),
     avatarGrid: document.getElementById('avatar-grid'),
     selectedAvatar: document.getElementById('selected-avatar')
 };
