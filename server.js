@@ -65,6 +65,19 @@ io.on('connection', (socket) => {
         io.emit('roomListUpdated', getActiveRooms());
     });
 
+    // Обработка текстовых сообщений
+    socket.on('sendMessage', ({ roomId, message }) => {
+        if (rooms[roomId] && users[socket.id]) {
+            const { username } = users[socket.id];
+            io.to(roomId).emit('newMessage', {
+                id: uuidv4(),
+                sender: username,
+                content: message,
+                timestamp: new Date()
+            });
+        }
+    });
+
     // Обработка сигналов WebRTC
     socket.on('webrtcSignal', ({ to, signal }) => {
         io.to(to).emit('webrtcSignal', { from: socket.id, signal });

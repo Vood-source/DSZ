@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const deafenBtn = document.getElementById('deafen-btn');
     const leaveBtn = document.getElementById('leave-btn');
     const voiceChannelsElement = document.querySelector('.voice-channels');
+    const messagesContainer = document.getElementById('messages-container');
+    const messageInput = document.getElementById('message-input');
+    const sendMessageBtn = document.getElementById('send-message-btn');
     let roomId = '';
     let localStream = null;
     let peerConnections = {};
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDeafened = false;
     let currentAudioElements = {};
     let users = {}; // Хранилище пользователей для быстрого доступа
+    let messages = []; // Хранилище сообщений для текущей комнаты
 
     // Обработчики событий
     usernameSubmit.addEventListener('click', setUsername);
@@ -52,6 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     muteBtn.addEventListener('click', toggleMute);
     deafenBtn.addEventListener('click', toggleDeafen);
     leaveBtn.addEventListener('click', leaveRoom);
+    sendMessageBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
 
     // Обработка получения списка пользователей в комнате
     socket.on('usersInRoom', (roomUsers) => {
@@ -73,6 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработка обновления списка комнат
     socket.on('roomListUpdated', (rooms) => {
         updateRoomList(rooms);
+    });
+
+    // Обработка нового сообщения
+    socket.on('newMessage', (message) => {
+        addMessageToChat(message);
     });
 
     // Установка имени пользователя
@@ -115,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addUserToList(username, true);
         setupWebRTC();
+        loadMessages(); // Загружаем сообщения при создании комнаты
     });
 
     // Обработка подключения к комнате
@@ -128,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addUserToList(username, true);
         setupWebRTC();
+        loadMessages(); // Загружаем сообщения при подключении к комнате
     });
 
     // Обработка подключения нового пользователя
@@ -370,6 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.values(peerConnections).forEach(pc => pc.destroy());
         peerConnections = {};
         currentAudioElements = {};
+        messages = []; // Очищаем сообщения при выходе из комнаты
+        messagesContainer.innerHTML = '';
 
         if (roomId) {
             socket.emit('leaveRoom', roomId);
@@ -382,5 +401,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Запрашиваем обновленный список комнат
         socket.emit('getActiveRooms');
+    }
+
+    // Отправка сообщения
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (message && roomId) {
+            socket.emit('sendMessage', { roomId, message });
+            messageInput.value = '';
+        }
+    }
+
+    // Добавление сообщения в чат
+    function addMessageToChat(message) {
+        messages.push(message);
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+
+        const isCurrentUser = message.sender === username;
+        const messageClass = isCurrentUser ? 'current-user' : 'other-user';
+
+        messageElement.innerHTML = `
+            <div class="sender">${message.sender}</div>
+            <div class="content">${escapeHtml(message.content)}</div>
+        `;
+
+        // Добавляем класс для стилизации сообщений текущего пользователя
+        if (isCurrentUser) {
+            messageElement.classList.add('current-user');
+        }
+
+        messagesContainer.appendChild(messageElement);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Экранирование HTML для безопасности
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Загрузка истории сообщений при подключении к комнате
+    function loadMessages() {
+        messagesContainer.innerHTML = '';
+        messages.forEach(message => {
+            addMessageToChat(message);
+        });
     }
 });
