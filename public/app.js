@@ -238,8 +238,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Настройка WebRTC
     async function setupWebRTC() {
         try {
-            // Запрашиваем доступ только к микрофону (видео не запрашиваем по умолчанию)
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            // Настраиваем ограничения для высокого качества звука
+            const audioConstraints = {
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    channelCount: 2,
+                    sampleRate: 48000,
+                    sampleSize: 16,
+                    // Используем кодек Opus для лучшего качества
+                    latency: 0.02, // 20ms для минимальной задержки
+                    // Настройка битрейта (в битах в секунду)
+                    // Opus поддерживает от 6 kbps до 510 kbps
+                    advanced: [
+                        { opus: { stereo: true, maxaveragebitrate: 128000 } } // 128 kbps для высокого качества
+                    ]
+                },
+                video: false
+            };
+
+            // Запрашиваем доступ к микрофону с настроенными параметрами
+            localStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
             muteBtn.textContent = isMuted ? '🎤 Включить микрофон' : '🎤 Выключить микрофон';
             muteBtn.disabled = false;
             deafenBtn.disabled = false;
