@@ -1,5 +1,5 @@
 import { state, updateState } from './state.js';
-import { elements, updateProfilePreview, loadAvatars, openProfileModal, closeProfileModal, saveProfileBtn, updateUserAudioIndicator } from './ui.js';
+import { elements, updateProfilePreview, loadAvatars, openProfileModal, closeProfileModal, updateUserAudioIndicator } from './ui.js';
 import { setupSocketListeners } from './socket-client.js';
 import { toggleScreenShare, toggleMute, toggleDeafen, stopScreenShare } from './webrtc.js';
 
