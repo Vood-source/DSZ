@@ -449,8 +449,20 @@ document.addEventListener('DOMContentLoaded', () => {
         label.className = 'video-label';
         label.textContent = isScreen ? 'Трансляция: ' + users[userId]?.username : users[userId]?.username || 'Пользователь';
 
+        // Кнопка полноэкранного режима
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'fullscreen-btn';
+        fullscreenBtn.innerHTML = '⛶';
+        fullscreenBtn.title = 'Развернуть на весь экран';
+        fullscreenBtn.addEventListener('click', () => toggleFullscreen(videoElement));
+
+        const controls = document.createElement('div');
+        controls.className = 'video-controls';
+        controls.appendChild(label);
+        controls.appendChild(fullscreenBtn);
+
         videoWrapper.appendChild(videoElement);
-        videoWrapper.appendChild(label);
+        videoWrapper.appendChild(controls);
 
         if (isScreen) {
             const screenIndicator = document.createElement('div');
@@ -479,6 +491,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (videoElements[key]) {
             videoContainer.removeChild(videoElements[key]);
             delete videoElements[key];
+        }
+    }
+
+    // Переключение полноэкранного режима
+    function toggleFullscreen(videoElement) {
+        if (!document.fullscreenElement) {
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) { /* Safari */
+                videoElement.webkitRequestFullscreen();
+            } else if (videoElement.msRequestFullscreen) { /* IE11 */
+                videoElement.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE11 */
+                document.msExitFullscreen();
+            }
         }
     }
 
