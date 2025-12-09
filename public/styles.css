@@ -226,6 +226,8 @@ body {
     padding: 8px 12px;
     word-wrap: break-word;
     max-width: 80%;
+    animation: fadeIn 0.2s ease-out;
+    margin-bottom: 4px;
 }
 
 .message .sender {
@@ -233,16 +235,6 @@ body {
     color: var(--primary-color);
     margin-bottom: 4px;
     font-size: 12px;
-}
-
-.message {
-    background-color: var(--background-secondary);
-    border-radius: 8px;
-    padding: 8px 12px;
-    word-wrap: break-word;
-    max-width: 80%;
-    animation: fadeIn 0.2s ease-out;
-    margin-bottom: 4px;
 }
 
 .message.current-user {
@@ -252,13 +244,6 @@ body {
 
 .message.other-user {
     margin-right: auto;
-}
-
-.message .sender {
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 4px;
-    font-size: 12px;
 }
 
 .message.current-user .sender {
@@ -362,6 +347,13 @@ body {
     margin-bottom: 4px;
 }
 
+.user-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+}
+
 .voice-indicator {
     margin-top: 4px;
     font-size: 12px;
@@ -428,6 +420,11 @@ body {
     font-size: 18px;
 }
 
+.modal h3 {
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
 .modal input {
     width: 100%;
     padding: 12px;
@@ -442,6 +439,7 @@ body {
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
 }
 
 .modal-buttons button {
@@ -482,4 +480,116 @@ body {
 
 .hidden {
     display: none;
+}
+
+/* Аватары */
+.avatar-section {
+    margin-bottom: 20px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.avatar-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-btn:hover {
+    border-color: var(--primary-color);
+}
+
+.avatar-btn.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(88, 101, 242, 0.2);
+}
+
+.selected-avatar {
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+/* Профиль */
+.profile-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background-color: var(--background-tertiary);
+    border-radius: 8px;
+}
+
+.user-avatar-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.user-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.user-status {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+/* Кнопка редактирования профиля */
+#edit-profile-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    background-color: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#edit-profile-btn:hover {
+    background-color: rgba(79, 84, 92, 0.5);
+}
+
+/* Статусы */
+.status-section {
+    margin-bottom: 20px;
+}
+
+.status-section select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--background-tertiary);
+    background-color: var(--background-tertiary);
+    color: var(--text-normal);
+    font-size: 14px;
+}
+
+/* Профиль пользователя в списке */
+.user-card .user-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
 }

@@ -64,8 +64,19 @@
 
     <div class="modal" id="username-modal">
         <div class="modal-content">
-            <h2>Введите ваше имя</h2>
+            <h2>Создайте свой профиль</h2>
             <input type="text" id="username-input" placeholder="Ваше имя">
+
+            <div class="avatar-section">
+                <h3>Выберите аватар</h3>
+                <div class="avatar-grid" id="avatar-grid">
+                    <!-- Аватары будут загружены динамически -->
+                </div>
+                <div class="selected-avatar">
+                    Выбранный аватар: <span id="selected-avatar">😊</span>
+                </div>
+            </div>
+
             <div class="modal-buttons">
                 <button id="username-submit">Продолжить</button>
             </div>
@@ -75,6 +86,12 @@
     <div class="modal" id="room-modal">
         <div class="modal-content">
             <h2>Создать или присоединиться к комнате</h2>
+            <div class="profile-preview">
+                <div class="user-avatar-large" id="profile-preview-avatar">😊</div>
+                <div class="user-name" id="profile-preview-username">Имя</div>
+                <div class="user-status" id="profile-preview-status">В сети</div>
+                <button id="edit-profile-btn">Редактировать профиль</button>
+            </div>
             <div class="room-options">
                 <button id="create-room-btn">Создать новую комнату</button>
                 <div class="or-divider">или</div>

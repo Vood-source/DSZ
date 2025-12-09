@@ -1,22 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Состояние приложения
     let username = localStorage.getItem('discordCloneUsername') || '';
+    let userAvatar = localStorage.getItem('discordCloneAvatar') || '';
+    let userStatus = localStorage.getItem('discordCloneStatus') || '';
     const socket = io(); // Инициализация Socket.IO в начале
 
     // Элементы DOM
     const usernameModal = document.getElementById('username-modal');
     const roomModal = document.getElementById('room-modal');
+    const profileModal = document.getElementById('profile-modal');
 
     // Если имя пользователя уже сохранено, пропускаем ввод имени
     if (username) {
         usernameModal.classList.add('hidden');
         roomModal.classList.remove('hidden');
 
+        // Обновляем превью профиля
+        updateProfilePreview();
+
         // Запрашиваем список активных комнат
         socket.emit('getActiveRooms');
     } else {
         usernameModal.classList.remove('hidden');
         roomModal.classList.add('hidden');
+        loadAvatars(); // Загружаем аватары для выбора
     }
     const usernameInput = document.getElementById('username-input');
     const usernameSubmit = document.getElementById('username-submit');
@@ -35,6 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendMessageBtn = document.getElementById('send-message-btn');
     const videoContainer = document.getElementById('video-container');
     const screenShareBtn = document.getElementById('screen-share-btn');
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+    const cancelProfileBtn = document.getElementById('cancel-profile-btn');
+    const profileAvatarGrid = document.getElementById('profile-avatar-grid');
+    const profileSelectedAvatar = document.getElementById('profile-selected-avatar');
+    const statusSelect = document.getElementById('status-select');
+    const profilePreviewAvatar = document.getElementById('profile-preview-avatar');
+    const profilePreviewUsername = document.getElementById('profile-preview-username');
+    const profilePreviewStatus = document.getElementById('profile-preview-status');
     let roomId = '';
     let localStream = null;
     let localScreenStream = null;
@@ -51,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
     usernameSubmit.addEventListener('click', setUsername);
     createRoomBtn.addEventListener('click', createRoom);
     joinRoomBtn.addEventListener('click', joinRoom);
+    editProfileBtn.addEventListener('click', openProfileModal);
+    saveProfileBtn.addEventListener('click', saveProfile);
+    cancelProfileBtn.addEventListener('click', closeProfileModal);
     createRoomElement.addEventListener('click', () => {
         if (username) {
             roomModal.classList.remove('hidden');
@@ -96,14 +115,52 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChat(message);
     });
 
+    // Загрузка доступных аватаров
+    function loadAvatars(selectedAvatar = '😊') {
+        const avatarGrid = document.getElementById('avatar-grid');
+        avatarGrid.innerHTML = '';
+
+        const avatars = [
+            '😊', '😎', '😇', '😈', '👽', '🤖', '🦄', '🐱', '🐶', '🦁',
+            '🦊', '🐻', '🐼', '🐨', '🦄', '🐙', '🐛', '🦋', '🐝', '🐞'
+        ];
+
+        avatars.forEach(avatar => {
+            const avatarBtn = document.createElement('button');
+            avatarBtn.className = 'avatar-btn';
+            avatarBtn.textContent = avatar;
+            avatarBtn.dataset.avatar = avatar;
+            if (avatar === selectedAvatar) {
+                avatarBtn.classList.add('selected');
+            }
+            avatarBtn.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-btn').forEach(btn => btn.classList.remove('selected'));
+                avatarBtn.classList.add('selected');
+                document.getElementById('selected-avatar').textContent = avatar;
+            });
+            avatarGrid.appendChild(avatarBtn);
+        });
+    }
+
     // Установка имени пользователя
     function setUsername() {
         const name = usernameInput.value.trim();
+        const selectedAvatar = document.querySelector('.avatar-btn.selected')?.dataset.avatar || '😊';
+
         if (name && name.length >= 3 && name.length <= 20 && /^[a-zA-Z0-9_]+$/.test(name)) {
             username = name;
+            userAvatar = selectedAvatar;
+            userStatus = 'В сети';
+
             localStorage.setItem('discordCloneUsername', name);
+            localStorage.setItem('discordCloneAvatar', selectedAvatar);
+            localStorage.setItem('discordCloneStatus', userStatus);
+
             usernameModal.classList.add('hidden');
             roomModal.classList.remove('hidden');
+
+            // Обновляем превью профиля
+            updateProfilePreview();
 
             // Запрашиваем список активных комнат при входе
             socket.emit('getActiveRooms');
@@ -695,3 +752,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// Инициализация приложения
+function initApp() {
+    // Загружаем информацию о профиле
+    loadProfileInfo();
+
+    // Если имя пользователя уже сохранено, обновляем превью
+    if (username) {
+        updateProfilePreview();
+    }
+}
+
+// Запускаем инициализацию при загрузке страницы
+initApp();
