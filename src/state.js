@@ -26,6 +26,17 @@ async function getActiveRooms() {
             LEFT JOIN users u ON r.id = u.room_id
             GROUP BY r.id
         `);
+
+        // Для каждой комнаты получаем список аватаров пользователей
+        for (const room of rooms) {
+            if (room.userCount > 0) {
+                const users = await db.all('SELECT avatar, username FROM users WHERE room_id = ? LIMIT 5', room.id);
+                room.users = users;
+            } else {
+                room.users = [];
+            }
+        }
+
         return rooms;
     } catch (err) {
         console.error('Ошибка при получении списка комнат:', err);

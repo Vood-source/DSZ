@@ -212,12 +212,26 @@ export function updateRoomList(rooms, joinRoomCallback) {
     rooms.forEach(room => {
         const roomElement = document.createElement('div');
         roomElement.className = 'channel';
+        
+        let usersHtml = '';
+        if (room.users && room.users.length > 0) {
+            usersHtml = '<div class="channel-users">';
+            room.users.forEach(user => {
+                usersHtml += `<div class="channel-user-avatar" title="${user.username}">${user.avatar}</div>`;
+            });
+            usersHtml += '</div>';
+        }
+
         roomElement.innerHTML = `
-            <span class="channel-icon">🔊</span>
-            <span class="channel-name">Комната ${room.id.substring(0, 8)}</span>
+            <div class="channel-info">
+                <span class="channel-icon">🔊</span>
+                <span class="channel-name">Комната ${room.id.substring(0, 8)}</span>
+            </div>
+            ${usersHtml}
         `;
         
-        roomElement.addEventListener('click', () => {
+        roomElement.addEventListener('click', (e) => {
+            // Предотвращаем переход, если кликнули на аватар (опционально)
             if (state.roomId !== room.id) {
                 joinRoomCallback(room.id);
             }
