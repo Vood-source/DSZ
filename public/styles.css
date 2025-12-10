@@ -27,10 +27,26 @@
 
 body {
     background-color: var(--background-primary);
+    background-image: url('https://images.wallpaperscraft.ru/image/single/chelovek_kub_stena_1132584_2560x1440.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: var(--text-normal);
     height: 100vh;
     display: flex;
     overflow: hidden;
+}
+
+/* Добавляем затемнение для читаемости */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Регулируйте прозрачность здесь */
+    z-index: -1;
 }
 
 /* Scrollbar Styling */
@@ -53,12 +69,14 @@ body {
     display: flex;
     width: 100%;
     height: 100%;
+    position: relative; /* Для правильного позиционирования поверх фона */
+    z-index: 1;
 }
 
 /* Sidebar (Server List) */
 .sidebar {
     width: 72px;
-    background-color: var(--background-tertiary);
+    background-color: rgba(32, 34, 37, 0.9); /* Полупрозрачность */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -120,7 +138,7 @@ body {
 /* Channels Sidebar */
 .channels-sidebar {
     width: 240px;
-    background-color: var(--background-secondary);
+    background-color: rgba(47, 49, 54, 0.9); /* Полупрозрачность */
     display: flex;
     flex-direction: column;
 }
@@ -317,7 +335,7 @@ body {
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-    background-color: var(--background-primary);
+    background-color: transparent;
 }
 
 .header-icon {
@@ -453,7 +471,7 @@ body {
 /* Members List */
 .members-sidebar {
     width: 240px;
-    background-color: var(--background-secondary);
+    background-color: rgba(47, 49, 54, 0.8); /* Полупрозрачность */
     padding: 24px 8px 0 8px;
     overflow-y: auto;
 }
