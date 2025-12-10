@@ -10,52 +10,91 @@
 
 <body>
     <div class="app-container">
+        <!-- Server List Sidebar -->
         <div class="sidebar">
-            <div class="server-info">
-                <h2>Discord Clone</h2>
+            <div class="server-icon active" title="Discord Clone">DC</div>
+            <div class="server-icon" title="Добавить сервер">+</div>
+            <div class="server-icon" title="Найти сервер">🔍</div>
+        </div>
+
+        <!-- Channels Sidebar -->
+        <div class="channels-sidebar">
+            <div class="server-header">
+                <span>Discord Clone</span>
+                <span>⌵</span>
             </div>
-            <div class="channels">
-                <h3>Голосовые каналы</h3>
+            <div class="channels-list">
+                <div class="category-header">
+                    <span>Голосовые каналы</span>
+                    <span>+</span>
+                </div>
                 <div class="voice-channels">
                     <div class="channel" id="create-room">
-                        <span>+ Создать комнату</span>
+                        <span class="channel-icon">+</span>
+                        <span class="channel-name">Создать комнату</span>
                     </div>
+                </div>
+            </div>
+            
+            <!-- User Area -->
+            <div class="user-area">
+                <div class="user-area-avatar" id="preview-avatar">😊
+                    <div class="user-area-status" id="preview-status-dot"></div>
+                </div>
+                <div class="user-area-info">
+                    <div class="user-area-name" id="preview-username">Загрузка...</div>
+                    <div class="user-area-discriminator" id="preview-status">В сети</div>
+                </div>
+                <div class="user-area-controls">
+                    <button class="control-button" id="mute-btn" title="Микрофон">🎤</button>
+                    <button class="control-button" id="deafen-btn" title="Звук">🎧</button>
+                    <button class="control-button" id="edit-profile-btn" title="Настройки">⚙️</button>
                 </div>
             </div>
         </div>
 
+        <!-- Main Chat Area -->
         <div class="main-content">
             <div class="chat-header">
-                <h2 id="room-name">Выберите или создайте комнату</h2>
+                <span class="header-icon">#</span>
+                <h2 class="header-title" id="room-name">Выберите или создайте комнату</h2>
             </div>
 
             <div class="chat-container">
-                <div class="text-chat-section">
-                    <div class="messages-container" id="messages-container">
+                <!-- Messages Area -->
+                <div class="messages-wrapper">
+                    <div class="messages-list" id="messages-container">
                         <!-- Сообщения будут добавлены здесь -->
                     </div>
-                    <div class="message-input-container">
-                        <input type="text" id="message-input" placeholder="Введите сообщение...">
-                        <button id="send-message-btn">Отправить</button>
+                    <div class="input-area">
+                        <div class="input-wrapper">
+                            <div class="input-icons">+</div>
+                            <input type="text" class="message-input" id="message-input" placeholder="Написать сообщение...">
+                            <div class="input-icons">
+                                <span class="input-icon" id="send-message-btn">➤</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Members Sidebar -->
+                <div class="members-sidebar">
+                    <div class="members-header">Участники</div>
+                    <div id="users-list">
+                        <!-- Список пользователей будет добавлен здесь -->
                     </div>
                 </div>
             </div>
-
-            <div class="voice-section">
-                <div class="users-list" id="users-list">
-                    <!-- Список пользователей будет добавлен здесь -->
-                </div>
-
-                <div class="video-container" id="video-container">
-                    <!-- Видео потоки будут добавлены здесь -->
-                </div>
-
-                <div class="voice-controls">
-                    <button id="mute-btn" class="control-btn">🎤 Выключить микрофон</button>
-                    <button id="deafen-btn" class="control-btn">🔇 Отключить звук</button>
-                    <button id="screen-share-btn" class="control-btn">🖥️ Транслировать экран</button>
-                    <button id="leave-btn" class="control-btn leave-btn">Выйти из комнаты</button>
-                </div>
+            
+            <!-- Video Container (Overlay or Separate Section) -->
+            <div class="video-grid hidden" id="video-container">
+                <!-- Видео потоки будут добавлены здесь -->
+            </div>
+            
+            <!-- Voice Controls Overlay -->
+            <div class="voice-controls-overlay hidden" id="voice-controls-overlay">
+                <button id="screen-share-btn" class="control-btn">🖥️ Экран</button>
+                <button id="leave-btn" class="control-btn leave-btn">Выйти</button>
             </div>
         </div>
     </div>

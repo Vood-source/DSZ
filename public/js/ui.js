@@ -31,20 +31,47 @@ export const elements = {
     profilePreviewAvatar: document.getElementById('profile-preview-avatar'),
     profilePreviewUsername: document.getElementById('profile-preview-username'),
     profilePreviewStatus: document.getElementById('profile-preview-status'),
-    previewAvatar: document.getElementById('profile-preview-avatar'),
-    previewStatus: document.getElementById('profile-preview-status'),
-    previewUsername: document.getElementById('profile-preview-username'),
+    previewAvatar: document.getElementById('preview-avatar'), // User Area Avatar
+    previewStatus: document.getElementById('preview-status'), // User Area Status Text
+    previewUsername: document.getElementById('preview-username'), // User Area Name
+    previewStatusDot: document.getElementById('preview-status-dot'), // User Area Status Dot
     avatarGrid: document.getElementById('avatar-grid'),
     selectedAvatar: document.getElementById('selected-avatar')
 };
 
 // Обновление превью профиля
 export function updateProfilePreview() {
-    if (elements.previewAvatar && elements.previewStatus && elements.previewUsername) {
-        elements.previewAvatar.textContent = state.userAvatar || '😊';
+    // Обновление в User Area
+    if (elements.previewAvatar) {
+        // Сохраняем дочерний элемент статуса
+        const statusDot = elements.previewStatusDot;
+        elements.previewAvatar.childNodes[0].nodeValue = state.userAvatar || '😊';
+        if (statusDot) elements.previewAvatar.appendChild(statusDot);
+    }
+    
+    if (elements.previewStatus) {
         elements.previewStatus.textContent = state.userStatus || 'В сети';
+    }
+    
+    if (elements.previewUsername) {
         elements.previewUsername.textContent = state.username || 'Ваше имя';
     }
+    
+    // Обновление точки статуса
+    if (elements.previewStatusDot) {
+        let color = '#3ba55c'; // Online
+        const status = state.userStatus;
+        if (status === 'Не беспокоить') color = '#ed4245';
+        else if (status === 'Отошел') color = '#faa61a';
+        else if (status === 'В игре') color = '#5865f2';
+        
+        elements.previewStatusDot.style.backgroundColor = color;
+    }
+
+    // Обновление в модальном окне (если оно открыто или будет открыто)
+    if (elements.profilePreviewAvatar) elements.profilePreviewAvatar.textContent = state.userAvatar || '😊';
+    if (elements.profilePreviewUsername) elements.profilePreviewUsername.textContent = state.username || 'Ваше имя';
+    if (elements.profilePreviewStatus) elements.profilePreviewStatus.textContent = state.userStatus || 'В сети';
 }
 
 // Загрузка аватаров
@@ -74,18 +101,30 @@ export function loadAvatars(selectedAvatar = '😊') {
 
 // Добавление пользователя в список
 export function addUserToList(user, isLocal = false) {
-    const userElement = document.createElement('div');
-    userElement.className = 'user-card';
+    const memberElement = document.createElement('div');
+    memberElement.className = 'member';
     const avatar = user.avatar || '😊';
     const status = user.status || 'В сети';
+    
+    // Определение статуса для CSS класса
+    let statusClass = 'status-online';
+    if (status === 'Не беспокоить') statusClass = 'status-dnd';
+    else if (status === 'Отошел') statusClass = 'status-idle';
+    else if (status === 'На связи') statusClass = 'status-online';
+    else statusClass = 'status-online';
 
-    userElement.innerHTML = `
-        <div class="user-avatar" title="${status}">${avatar}</div>
-        <div class="user-name">${user.username}</div>
-        <div class="user-status">${status}</div>
-        ${isLocal ? '<div class="voice-indicator">Вы</div>' : '<div class="voice-indicator">Говорит...</div>'}
+    memberElement.innerHTML = `
+        <div class="member-avatar">
+            ${avatar}
+            <div class="member-status-indicator ${statusClass}"></div>
+        </div>
+        <div class="member-name ${isLocal ? 'current' : ''}">${user.username}</div>
     `;
-    elements.usersListElement.appendChild(userElement);
+    
+    // Добавляем индикатор голоса, если нужно (пока просто класс)
+    memberElement.dataset.userId = user.id; // Для легкого поиска
+    
+    elements.usersListElement.appendChild(memberElement);
 }
 
 // Обновление списка пользователей
@@ -101,16 +140,25 @@ export function addMessageToChat(message) {
     state.messages.push(message);
     const messageElement = document.createElement('div');
     messageElement.className = 'message';
-    const isCurrentUser = message.sender === state.username;
+    
+    // Получаем аватар пользователя из state.users если возможно, иначе дефолтный
+    // В реальном приложении аватар должен приходить с сообщением
+    const senderUser = Object.values(state.users).find(u => u.username === message.sender);
+    const avatar = senderUser ? senderUser.avatar : '👤';
+
+    // Форматирование времени
+    const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     messageElement.innerHTML = `
-        <div class="sender">${message.sender}</div>
-        <div class="content">${escapeHtml(message.content)}</div>
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content-wrapper">
+            <div class="message-header">
+                <span class="message-author">${message.sender}</span>
+                <span class="message-timestamp">${time}</span>
+            </div>
+            <div class="message-text">${escapeHtml(message.content)}</div>
+        </div>
     `;
-
-    if (isCurrentUser) {
-        messageElement.classList.add('current-user');
-    }
 
     elements.messagesContainer.appendChild(messageElement);
     elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
@@ -133,14 +181,25 @@ function escapeHtml(text) {
 
 // Обновление списка комнат
 export function updateRoomList(rooms, joinRoomCallback) {
-    while (elements.voiceChannelsElement.children.length > 1) {
-        elements.voiceChannelsElement.removeChild(elements.voiceChannelsElement.children[1]);
-    }
+    // Очищаем список комнат, оставляя кнопку создания
+    // В новой структуре кнопка создания находится внутри .voice-channels, как и комнаты
+    // Но лучше очищать все кроме кнопки с ID create-room
+    
+    const channelsContainer = elements.voiceChannelsElement;
+    // Сохраняем кнопку создания
+    const createBtn = document.getElementById('create-room');
+    
+    channelsContainer.innerHTML = '';
+    if (createBtn) channelsContainer.appendChild(createBtn);
 
     rooms.forEach(room => {
         const roomElement = document.createElement('div');
         roomElement.className = 'channel';
-        roomElement.innerHTML = `<span># Голосовая комната ${room.id.substring(0, 8)}</span>`;
+        // Используем иконку динамика для голосовых каналов
+        roomElement.innerHTML = `
+            <span class="channel-icon">🔊</span>
+            <span class="channel-name">Комната ${room.id.substring(0, 8)}</span>
+        `;
         
         roomElement.addEventListener('click', () => {
             if (state.roomId !== room.id) {
@@ -153,7 +212,8 @@ export function updateRoomList(rooms, joinRoomCallback) {
             roomElement.classList.add('active');
         }
 
-        elements.voiceChannelsElement.insertBefore(roomElement, elements.voiceChannelsElement.children[1]);
+        // Вставляем перед кнопкой создания или в конец
+        channelsContainer.insertBefore(roomElement, createBtn);
     });
 }
 
@@ -205,30 +265,42 @@ export function closeProfileModal() {
 
 // Обновление индикатора аудио
 export function updateUserAudioIndicator(userId, isSpeaking) {
-    const userCards = document.querySelectorAll('.user-card');
-    userCards.forEach(card => {
-        const userNameElement = card.querySelector('.user-name');
-        if (!userNameElement) return;
-
-        const usernameFromCard = userNameElement.textContent;
-        const isCurrentUser = userId === state.socket.id;
-
-        if ((isCurrentUser && usernameFromCard === state.username) ||
-            (!isCurrentUser && state.users[userId] && state.users[userId].username === usernameFromCard)) {
-            const indicator = card.querySelector('.voice-indicator');
-            const avatar = card.querySelector('.user-avatar');
-
-            if (indicator) {
-                indicator.textContent = isSpeaking ? 'Говорит...' : (isCurrentUser ? (state.isMuted ? 'Микрофон выключен' : 'Вы') : 'Молчит');
-                indicator.style.color = isSpeaking ? '#43b581' : '#72767d';
+    // В новой структуре ищем по data-userId или по имени
+    // Лучше использовать data-userId, который мы добавили в addUserToList
+    
+    // Если userId не передан, ничего не делаем
+    if (!userId) return;
+    
+    // Находим элемент пользователя в списке
+    // Мы не добавляли ID в DOM элемент в предыдущей версии addUserToList,
+    // но в новой версии добавили memberElement.dataset.userId = user.id
+    
+    // Ищем элемент по dataset.userId
+    const memberElements = document.querySelectorAll('.member');
+    
+    memberElements.forEach(member => {
+        // Проверяем соответствие ID
+        // Если это локальный пользователь, ID может быть сокета
+        
+        let isMatch = false;
+        
+        if (member.dataset.userId === userId) {
+            isMatch = true;
+        } else {
+            // Fallback: поиск по имени (менее надежно)
+            const nameEl = member.querySelector('.member-name');
+            if (nameEl && state.users[userId] && nameEl.textContent === state.users[userId].username) {
+                isMatch = true;
             }
-
+        }
+        
+        if (isMatch) {
+            const avatar = member.querySelector('.member-avatar');
             if (avatar) {
-                avatar.style.border = isSpeaking ? '2px solid #43b581' : 'none';
                 if (isSpeaking) {
-                    avatar.classList.add('speaking');
+                    avatar.style.boxShadow = '0 0 0 2px #3ba55c'; // Зеленая обводка
                 } else {
-                    avatar.classList.remove('speaking');
+                    avatar.style.boxShadow = 'none';
                 }
             }
         }
