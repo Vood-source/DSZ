@@ -121,19 +121,39 @@
     </div>
 
     <div class="modal" id="room-modal">
-        <div class="modal-content">
-            <h2>Создать или присоединиться к комнате</h2>
-            <div class="profile-preview">
+        <div class="modal-content room-modal-content">
+            <h2 class="text-center mb-4">Добро пожаловать!</h2>
+            
+            <div class="profile-preview-card">
                 <div class="user-avatar-large" id="profile-preview-avatar">😊</div>
-                <div class="user-name" id="profile-preview-username">Имя</div>
-                <div class="user-status" id="profile-preview-status">В сети</div>
-                <button id="edit-profile-btn">Редактировать профиль</button>
+                <div class="profile-info">
+                    <div class="user-name" id="profile-preview-username">Имя</div>
+                    <div class="user-status" id="profile-preview-status">В сети</div>
+                </div>
+                <button id="edit-profile-btn" class="btn-icon" title="Редактировать">✏️</button>
             </div>
-            <div class="room-options">
-                <button id="create-room-btn">Создать новую комнату</button>
-                <div class="or-divider">или</div>
-                <input type="text" id="room-id-input" placeholder="Введите ID комнаты">
-                <button id="join-room-btn">Присоединиться</button>
+
+            <div class="room-actions">
+                <div class="action-card" id="create-room-btn">
+                    <div class="action-icon">➕</div>
+                    <div class="action-details">
+                        <h3>Создать комнату</h3>
+                        <p>Начните новый разговор</p>
+                    </div>
+                    <div class="action-arrow">›</div>
+                </div>
+
+                <div class="divider">
+                    <span>ИЛИ</span>
+                </div>
+
+                <div class="join-room-section">
+                    <h3>Присоединиться к комнате</h3>
+                    <div class="input-group">
+                        <input type="text" id="room-id-input" placeholder="Введите ID комнаты">
+                        <button id="join-room-btn" class="btn-primary">Вперед</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

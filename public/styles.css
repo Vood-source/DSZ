@@ -687,6 +687,158 @@ body {
     background-color: rgba(88, 101, 242, 0.1);
 }
 
+/* Room Modal Styles */
+.room-modal-content {
+    width: 480px;
+    padding: 32px;
+}
+
+.text-center { text-align: center; }
+.mb-4 { margin-bottom: 24px; }
+
+.profile-preview-card {
+    background-color: var(--background-tertiary);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.profile-preview-card .user-avatar-large {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    margin-bottom: 0;
+    margin-right: 16px;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-preview-card .user-name {
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+
+.profile-preview-card .user-status {
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    color: var(--text-muted);
+}
+
+.btn-icon:hover {
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+}
+
+.action-card {
+    background-color: var(--background-tertiary);
+    border: 1px solid var(--background-tertiary);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.action-card:hover {
+    background-color: var(--background-secondary);
+    border-color: var(--primary-color);
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--background-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: var(--button-success);
+    font-size: 20px;
+}
+
+.action-details h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-normal);
+}
+
+.action-details p {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.action-arrow {
+    margin-left: auto;
+    font-size: 24px;
+    color: var(--text-muted);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: var(--background-tertiary);
+}
+
+.divider span {
+    padding: 0 8px;
+}
+
+.join-room-section h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--background-tertiary);
+    border: 1px solid var(--background-tertiary);
+    border-radius: 4px;
+    color: var(--text-normal);
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
