@@ -40,7 +40,14 @@ export function createPeerConnection(userId) {
     const peerConnection = new SimplePeer({
         initiator: state.socket.id > userId,
         trickle: false,
-        stream: state.localStream
+        stream: state.localStream,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' },
+                { urls: 'stun:stun.voip.blackberry.com:3478' }
+            ]
+        }
     });
 
     peerConnection.on('signal', signal => {
@@ -86,7 +93,14 @@ export function createScreenPeerConnection(userId) {
     const peerConnection = new SimplePeer({
         initiator: state.socket.id > userId,
         trickle: false,
-        stream: state.localScreenStream
+        stream: state.localScreenStream,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' },
+                { urls: 'stun:stun.voip.blackberry.com:3478' }
+            ]
+        }
     });
 
     peerConnection.on('signal', signal => {
