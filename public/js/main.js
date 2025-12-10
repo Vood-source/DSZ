@@ -124,26 +124,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Обработчики событий
-    elements.usernameSubmit.addEventListener('click', setUsername);
-    elements.createRoomBtn.addEventListener('click', createRoom);
-    elements.joinRoomBtn.addEventListener('click', joinRoomHandler);
-    elements.editProfileBtn.addEventListener('click', openProfileModal);
-    elements.saveProfileBtn.addEventListener('click', saveProfile);
-    elements.cancelProfileBtn.addEventListener('click', closeProfileModal);
+    if (elements.usernameSubmit) elements.usernameSubmit.addEventListener('click', setUsername);
+    if (elements.createRoomBtn) elements.createRoomBtn.addEventListener('click', createRoom);
+    if (elements.joinRoomBtn) elements.joinRoomBtn.addEventListener('click', joinRoomHandler);
+    if (elements.editProfileBtn) elements.editProfileBtn.addEventListener('click', openProfileModal);
+    if (elements.saveProfileBtn) elements.saveProfileBtn.addEventListener('click', saveProfile);
+    if (elements.cancelProfileBtn) elements.cancelProfileBtn.addEventListener('click', closeProfileModal);
     
-    elements.createRoomElement.addEventListener('click', () => {
-        if (state.username) elements.roomModal.classList.remove('hidden');
-        else elements.usernameModal.classList.remove('hidden');
-    });
+    if (elements.createRoomElement) {
+        elements.createRoomElement.addEventListener('click', () => {
+            if (state.username) elements.roomModal.classList.remove('hidden');
+            else elements.usernameModal.classList.remove('hidden');
+        });
+    }
 
-    elements.muteBtn.addEventListener('click', toggleMute);
-    elements.deafenBtn.addEventListener('click', toggleDeafen);
-    elements.leaveBtn.addEventListener('click', leaveRoom);
-    elements.sendMessageBtn.addEventListener('click', sendMessage);
+    if (elements.muteBtn) elements.muteBtn.addEventListener('click', toggleMute);
+    if (elements.deafenBtn) elements.deafenBtn.addEventListener('click', toggleDeafen);
+    if (elements.leaveBtn) elements.leaveBtn.addEventListener('click', leaveRoom);
+    if (elements.sendMessageBtn) elements.sendMessageBtn.addEventListener('click', sendMessage);
     
-    elements.messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    if (elements.messageInput) {
+        elements.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    }
     
-    elements.screenShareBtn.addEventListener('click', toggleScreenShare);
+    if (elements.screenShareBtn) elements.screenShareBtn.addEventListener('click', toggleScreenShare);
 });

@@ -245,17 +245,17 @@ export function loadProfileAvatars(selectedAvatar = '😊') {
 
 // Открытие модального окна профиля
 export function openProfileModal() {
-    elements.profileSelectedAvatar.textContent = state.userAvatar || '😊';
-    elements.profilePreviewAvatar.textContent = state.userAvatar || '😊';
-    elements.profilePreviewUsername.textContent = state.username || 'Ваше имя';
-    elements.profilePreviewStatus.textContent = state.userStatus || 'В сети';
+    if (elements.profileSelectedAvatar) elements.profileSelectedAvatar.textContent = state.userAvatar || '😊';
+    if (elements.profilePreviewAvatar) elements.profilePreviewAvatar.textContent = state.userAvatar || '😊';
+    if (elements.profilePreviewUsername) elements.profilePreviewUsername.textContent = state.username || 'Ваше имя';
+    if (elements.profilePreviewStatus) elements.profilePreviewStatus.textContent = state.userStatus || 'В сети';
 
     loadProfileAvatars(state.userAvatar || '😊');
 
     if (elements.statusSelect) {
         elements.statusSelect.value = state.userStatus || 'В сети';
     }
-    elements.profileModal.classList.remove('hidden');
+    if (elements.profileModal) elements.profileModal.classList.remove('hidden');
 }
 
 // Закрытие модального окна профиля
