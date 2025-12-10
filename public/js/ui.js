@@ -255,12 +255,19 @@ export function openProfileModal() {
     if (elements.statusSelect) {
         elements.statusSelect.value = state.userStatus || 'В сети';
     }
-    if (elements.profileModal) elements.profileModal.classList.remove('hidden');
+    if (elements.profileModal) {
+        elements.profileModal.classList.remove('hidden');
+        // Небольшая задержка для анимации
+        setTimeout(() => elements.profileModal.classList.add('active'), 10);
+    }
 }
 
 // Закрытие модального окна профиля
 export function closeProfileModal() {
-    elements.profileModal.classList.add('hidden');
+    if (elements.profileModal) {
+        elements.profileModal.classList.remove('active');
+        setTimeout(() => elements.profileModal.classList.add('hidden'), 200);
+    }
 }
 
 // Обновление индикатора аудио

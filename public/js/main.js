@@ -18,12 +18,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state.username) {
         elements.usernameModal.classList.add('hidden');
+        elements.usernameModal.classList.remove('active');
+        
         elements.roomModal.classList.remove('hidden');
+        setTimeout(() => elements.roomModal.classList.add('active'), 10);
+        
         updateProfilePreview();
         state.socket.emit('getActiveRooms');
     } else {
         elements.usernameModal.classList.remove('hidden');
+        setTimeout(() => elements.usernameModal.classList.add('active'), 10);
+        
         elements.roomModal.classList.add('hidden');
+        elements.roomModal.classList.remove('active');
+        
         loadAvatars();
     }
 
@@ -47,8 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('discordCloneAvatar', selectedAvatar);
             localStorage.setItem('discordCloneStatus', 'В сети');
 
-            elements.usernameModal.classList.add('hidden');
+            elements.usernameModal.classList.remove('active');
+            setTimeout(() => elements.usernameModal.classList.add('hidden'), 200);
+            
             elements.roomModal.classList.remove('hidden');
+            setTimeout(() => elements.roomModal.classList.add('active'), 10);
+            
             updateProfilePreview();
             state.socket.emit('getActiveRooms');
         } else {
@@ -133,8 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (elements.createRoomElement) {
         elements.createRoomElement.addEventListener('click', () => {
-            if (state.username) elements.roomModal.classList.remove('hidden');
-            else elements.usernameModal.classList.remove('hidden');
+            if (state.username) {
+                elements.roomModal.classList.remove('hidden');
+                setTimeout(() => elements.roomModal.classList.add('active'), 10);
+            } else {
+                elements.usernameModal.classList.remove('hidden');
+                setTimeout(() => elements.usernameModal.classList.add('active'), 10);
+            }
         });
     }
 

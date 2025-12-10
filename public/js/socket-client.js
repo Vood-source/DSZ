@@ -33,7 +33,11 @@ export function setupSocketListeners() {
 
     socket.on('roomCreated', ({ roomId: newRoomId, username: creator }) => {
         updateState('roomId', newRoomId);
-        document.getElementById('room-modal').classList.add('hidden');
+        const roomModal = document.getElementById('room-modal');
+        if (roomModal) {
+            roomModal.classList.remove('active');
+            setTimeout(() => roomModal.classList.add('hidden'), 200);
+        }
         document.getElementById('room-name').textContent = `Комната: ${newRoomId}`;
         socket.emit('getActiveRooms');
         addUserToList({ username: state.username, avatar: state.userAvatar, status: state.userStatus }, true);
@@ -43,7 +47,11 @@ export function setupSocketListeners() {
 
     socket.on('roomJoined', ({ roomId: newRoomId, username: joiner }) => {
         updateState('roomId', newRoomId);
-        document.getElementById('room-modal').classList.add('hidden');
+        const roomModal = document.getElementById('room-modal');
+        if (roomModal) {
+            roomModal.classList.remove('active');
+            setTimeout(() => roomModal.classList.add('hidden'), 200);
+        }
         document.getElementById('room-name').textContent = `Комната: ${newRoomId}`;
         socket.emit('getActiveRooms');
         addUserToList({ username: state.username, avatar: state.userAvatar, status: state.userStatus }, true);
