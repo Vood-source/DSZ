@@ -5,7 +5,16 @@ import { toggleScreenShare, toggleMute, toggleDeafen, stopScreenShare } from './
 
 document.addEventListener('DOMContentLoaded', () => {
     state.socket = io();
-    setupSocketListeners();
+
+    // Функции действий
+    function joinRoom(roomId) {
+        if (roomId) {
+            state.socket.emit('joinRoom', { roomId, username: state.username, avatar: state.userAvatar, status: state.userStatus });
+        }
+    }
+
+    // Передаем callback joinRoom в setupSocketListeners
+    setupSocketListeners(joinRoom);
 
     // Инициализация
     function initApp() {
@@ -34,13 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         loadAvatars();
     }
-
-    // Функции действий
-    window.joinRoom = function(roomId) {
-        if (roomId) {
-            state.socket.emit('joinRoom', { roomId, username: state.username, avatar: state.userAvatar, status: state.userStatus });
-        }
-    };
 
     function setUsername() {
         const name = elements.usernameInput.value.trim();
@@ -74,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function joinRoomHandler() {
         const roomId = elements.roomIdInput.value.trim();
-        window.joinRoom(roomId);
+        joinRoom(roomId);
     }
 
     function leaveRoom() {

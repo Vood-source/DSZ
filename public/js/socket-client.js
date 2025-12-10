@@ -2,7 +2,7 @@ import { state, updateState } from './state.js';
 import { updateUsersList, updateRoomList, addMessageToChat, updateProfilePreview, addUserToList, loadMessages } from './ui.js';
 import { setupWebRTC, createPeerConnection, createScreenPeerConnection } from './webrtc.js';
 
-export function setupSocketListeners() {
+export function setupSocketListeners(joinRoomCallback) {
     const socket = state.socket;
 
     socket.on('usersInRoom', (roomUsers) => {
@@ -18,12 +18,8 @@ export function setupSocketListeners() {
     });
 
     socket.on('roomListUpdated', (rooms) => {
-        // Callback для присоединения к комнате будет передан из main.js через глобальную функцию или другой механизм
-        // В данном случае мы можем экспортировать функцию joinRoom из main.js, но это создаст циклическую зависимость.
-        // Поэтому лучше передать callback при инициализации или использовать событие.
-        // Для простоты, мы будем использовать window.joinRoom, который мы определим в main.js
-        if (window.joinRoom) {
-            updateRoomList(rooms, window.joinRoom);
+        if (joinRoomCallback) {
+            updateRoomList(rooms, joinRoomCallback);
         }
     });
 
