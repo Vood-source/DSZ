@@ -35,7 +35,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- User Area -->
             <div class="user-area">
                 <div class="user-area-avatar" id="preview-avatar">😊
@@ -58,6 +58,10 @@
             <div class="chat-header">
                 <span class="header-icon">#</span>
                 <h2 class="header-title" id="room-name">Выберите или создайте комнату</h2>
+                <div class="header-controls">
+                    <button class="btn-icon" id="copy-room-id-btn" title="Копировать ID комнаты"
+                        style="display: none;">📋</button>
+                </div>
             </div>
 
             <div class="chat-container">
@@ -69,7 +73,8 @@
                     <div class="input-area">
                         <div class="input-wrapper">
                             <div class="input-icons">+</div>
-                            <input type="text" class="message-input" id="message-input" placeholder="Написать сообщение...">
+                            <input type="text" class="message-input" id="message-input"
+                                placeholder="Написать сообщение...">
                             <div class="input-icons">
                                 <span class="input-icon" id="send-message-btn">➤</span>
                             </div>
@@ -85,12 +90,12 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Video Container (Overlay or Separate Section) -->
             <div class="video-grid hidden" id="video-container">
                 <!-- Видео потоки будут добавлены здесь -->
             </div>
-            
+
             <!-- Voice Controls Overlay -->
             <div class="voice-controls-overlay hidden" id="voice-controls-overlay">
                 <button id="screen-share-btn" class="control-btn">🖥️ Экран</button>
@@ -123,7 +128,7 @@
     <div class="modal" id="room-modal">
         <div class="modal-content room-modal-content">
             <h2 class="text-center mb-4">Добро пожаловать!</h2>
-            
+
             <div class="profile-preview-card">
                 <div class="user-avatar-large" id="profile-preview-avatar">😊</div>
                 <div class="profile-info">

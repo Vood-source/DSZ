@@ -1,5 +1,5 @@
 import { state, updateState } from './state.js';
-import { elements, updateProfilePreview, loadAvatars, openProfileModal, closeProfileModal, updateUserAudioIndicator } from './ui.js';
+import { elements, updateProfilePreview, loadAvatars, openProfileModal, closeProfileModal, updateUserAudioIndicator, showToast } from './ui.js';
 import { setupSocketListeners } from './socket-client.js';
 import { toggleScreenShare, toggleMute, toggleDeafen, stopScreenShare } from './webrtc.js';
 
@@ -105,6 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateState('roomId', '');
         elements.roomNameElement.textContent = 'Выберите или создайте комнату';
+        if (elements.copyRoomIdBtn) elements.copyRoomIdBtn.style.display = 'none';
+        
         elements.usersListElement.innerHTML = '';
         elements.muteBtn.disabled = true;
         elements.deafenBtn.disabled = true;
@@ -123,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveProfile() {
-        const selectedAvatar = document.querySelector('#profile-avatar-grid .avatar-btn.selected')?.dataset.avatar || state.userAvatar || '😊';
+        const selectedAvatar = document.querySelector('#profile-avatar-grid .avatar-option.selected')?.textContent || state.userAvatar || '😊';
         const selectedStatus = elements.statusSelect.value || state.userStatus || 'В сети';
 
         updateState('userAvatar', selectedAvatar);
@@ -135,6 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProfilePreview();
         state.socket.emit('updateProfile', { avatar: selectedAvatar, status: selectedStatus });
         closeProfileModal();
+    }
+
+    function copyRoomId() {
+        if (state.roomId) {
+            navigator.clipboard.writeText(state.roomId).then(() => {
+                showToast('ID комнаты скопирован!', 'success');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+                showToast('Не удалось скопировать ID', 'error');
+            });
+        }
     }
 
     // Обработчики событий
@@ -169,4 +182,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (elements.screenShareBtn) elements.screenShareBtn.addEventListener('click', toggleScreenShare);
+    if (elements.copyRoomIdBtn) elements.copyRoomIdBtn.addEventListener('click', copyRoomId);
 });

@@ -35,6 +35,9 @@ export function setupSocketListeners(joinRoomCallback) {
             setTimeout(() => roomModal.classList.add('hidden'), 200);
         }
         document.getElementById('room-name').textContent = `Комната: ${newRoomId}`;
+        const copyBtn = document.getElementById('copy-room-id-btn');
+        if (copyBtn) copyBtn.style.display = 'block';
+        
         socket.emit('getActiveRooms');
         addUserToList({ username: state.username, avatar: state.userAvatar, status: state.userStatus }, true);
         setupWebRTC();
@@ -49,6 +52,9 @@ export function setupSocketListeners(joinRoomCallback) {
             setTimeout(() => roomModal.classList.add('hidden'), 200);
         }
         document.getElementById('room-name').textContent = `Комната: ${newRoomId}`;
+        const copyBtn = document.getElementById('copy-room-id-btn');
+        if (copyBtn) copyBtn.style.display = 'block';
+
         socket.emit('getActiveRooms');
         addUserToList({ username: state.username, avatar: state.userAvatar, status: state.userStatus }, true);
         setupWebRTC();

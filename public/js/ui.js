@@ -36,8 +36,30 @@ export const elements = {
     previewUsername: document.getElementById('preview-username'), // User Area Name
     previewStatusDot: document.getElementById('preview-status-dot'), // User Area Status Dot
     avatarGrid: document.getElementById('avatar-grid'),
-    selectedAvatar: document.getElementById('selected-avatar')
+    selectedAvatar: document.getElementById('selected-avatar'),
+    copyRoomIdBtn: document.getElementById('copy-room-id-btn')
 };
+
+// Функция для показа тостов
+export function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Анимация появления
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Удаление через 3 секунды
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, 3000);
+}
 
 // Обновление превью профиля
 export function updateProfilePreview() {
@@ -76,6 +98,7 @@ export function updateProfilePreview() {
 
 // Загрузка аватаров
 export function loadAvatars(selectedAvatar = '😊') {
+    if (!elements.avatarGrid) return;
     elements.avatarGrid.innerHTML = '';
     const avatars = [
         '😊', '😎', '😇', '😈', '👽', '🤖', '🦄', '🐱', '🐶', '🦁',
@@ -83,17 +106,16 @@ export function loadAvatars(selectedAvatar = '😊') {
     ];
 
     avatars.forEach(avatar => {
-        const avatarBtn = document.createElement('button');
-        avatarBtn.className = 'avatar-btn';
+        const avatarBtn = document.createElement('div');
+        avatarBtn.className = 'avatar-option';
         avatarBtn.textContent = avatar;
-        avatarBtn.dataset.avatar = avatar;
         if (avatar === selectedAvatar) {
             avatarBtn.classList.add('selected');
         }
         avatarBtn.addEventListener('click', () => {
-            document.querySelectorAll('.avatar-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.avatar-option').forEach(btn => btn.classList.remove('selected'));
             avatarBtn.classList.add('selected');
-            elements.selectedAvatar.textContent = avatar;
+            if (elements.selectedAvatar) elements.selectedAvatar.textContent = avatar;
         });
         elements.avatarGrid.appendChild(avatarBtn);
     });
@@ -121,7 +143,6 @@ export function addUserToList(user, isLocal = false) {
         <div class="member-name ${isLocal ? 'current' : ''}">${user.username}</div>
     `;
     
-    // Добавляем индикатор голоса, если нужно (пока просто класс)
     memberElement.dataset.userId = user.id; // Для легкого поиска
     
     elements.usersListElement.appendChild(memberElement);
@@ -142,7 +163,6 @@ export function addMessageToChat(message) {
     messageElement.className = 'message';
     
     // Получаем аватар пользователя из state.users если возможно, иначе дефолтный
-    // В реальном приложении аватар должен приходить с сообщением
     const senderUser = Object.values(state.users).find(u => u.username === message.sender);
     const avatar = senderUser ? senderUser.avatar : '👤';
 
@@ -161,6 +181,8 @@ export function addMessageToChat(message) {
     `;
 
     elements.messagesContainer.appendChild(messageElement);
+    
+    // Авто-скролл вниз
     elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
 }
 
@@ -181,12 +203,7 @@ function escapeHtml(text) {
 
 // Обновление списка комнат
 export function updateRoomList(rooms, joinRoomCallback) {
-    // Очищаем список комнат, оставляя кнопку создания
-    // В новой структуре кнопка создания находится внутри .voice-channels, как и комнаты
-    // Но лучше очищать все кроме кнопки с ID create-room
-    
     const channelsContainer = elements.voiceChannelsElement;
-    // Сохраняем кнопку создания
     const createBtn = document.getElementById('create-room');
     
     channelsContainer.innerHTML = '';
@@ -195,7 +212,6 @@ export function updateRoomList(rooms, joinRoomCallback) {
     rooms.forEach(room => {
         const roomElement = document.createElement('div');
         roomElement.className = 'channel';
-        // Используем иконку динамика для голосовых каналов
         roomElement.innerHTML = `
             <span class="channel-icon">🔊</span>
             <span class="channel-name">Комната ${room.id.substring(0, 8)}</span>
@@ -212,13 +228,13 @@ export function updateRoomList(rooms, joinRoomCallback) {
             roomElement.classList.add('active');
         }
 
-        // Вставляем перед кнопкой создания или в конец
         channelsContainer.insertBefore(roomElement, createBtn);
     });
 }
 
 // Загрузка аватаров профиля
 export function loadProfileAvatars(selectedAvatar = '😊') {
+    if (!elements.profileAvatarGrid) return;
     elements.profileAvatarGrid.innerHTML = '';
     const avatars = [
         '😊', '😎', '😇', '😈', '👽', '🤖', '🦄', '🐱', '🐶', '🦁',
@@ -226,18 +242,17 @@ export function loadProfileAvatars(selectedAvatar = '😊') {
     ];
 
     avatars.forEach(avatar => {
-        const avatarBtn = document.createElement('button');
-        avatarBtn.className = 'avatar-btn';
+        const avatarBtn = document.createElement('div');
+        avatarBtn.className = 'avatar-option';
         avatarBtn.textContent = avatar;
-        avatarBtn.dataset.avatar = avatar;
         if (avatar === selectedAvatar) {
             avatarBtn.classList.add('selected');
         }
         avatarBtn.addEventListener('click', () => {
-            document.querySelectorAll('#profile-avatar-grid .avatar-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('#profile-avatar-grid .avatar-option').forEach(btn => btn.classList.remove('selected'));
             avatarBtn.classList.add('selected');
-            elements.profileSelectedAvatar.textContent = avatar;
-            elements.profilePreviewAvatar.textContent = avatar;
+            if (elements.profileSelectedAvatar) elements.profileSelectedAvatar.textContent = avatar;
+            if (elements.profilePreviewAvatar) elements.profilePreviewAvatar.textContent = avatar;
         });
         elements.profileAvatarGrid.appendChild(avatarBtn);
     });
@@ -257,7 +272,6 @@ export function openProfileModal() {
     }
     if (elements.profileModal) {
         elements.profileModal.classList.remove('hidden');
-        // Небольшая задержка для анимации
         setTimeout(() => elements.profileModal.classList.add('active'), 10);
     }
 }
@@ -272,29 +286,16 @@ export function closeProfileModal() {
 
 // Обновление индикатора аудио
 export function updateUserAudioIndicator(userId, isSpeaking) {
-    // В новой структуре ищем по data-userId или по имени
-    // Лучше использовать data-userId, который мы добавили в addUserToList
-    
-    // Если userId не передан, ничего не делаем
     if (!userId) return;
     
-    // Находим элемент пользователя в списке
-    // Мы не добавляли ID в DOM элемент в предыдущей версии addUserToList,
-    // но в новой версии добавили memberElement.dataset.userId = user.id
-    
-    // Ищем элемент по dataset.userId
     const memberElements = document.querySelectorAll('.member');
     
     memberElements.forEach(member => {
-        // Проверяем соответствие ID
-        // Если это локальный пользователь, ID может быть сокета
-        
         let isMatch = false;
         
         if (member.dataset.userId === userId) {
             isMatch = true;
         } else {
-            // Fallback: поиск по имени (менее надежно)
             const nameEl = member.querySelector('.member-name');
             if (nameEl && state.users[userId] && nameEl.textContent === state.users[userId].username) {
                 isMatch = true;
@@ -305,7 +306,7 @@ export function updateUserAudioIndicator(userId, isSpeaking) {
             const avatar = member.querySelector('.member-avatar');
             if (avatar) {
                 if (isSpeaking) {
-                    avatar.style.boxShadow = '0 0 0 2px #3ba55c'; // Зеленая обводка
+                    avatar.style.boxShadow = '0 0 0 2px #3ba55c';
                 } else {
                     avatar.style.boxShadow = 'none';
                 }

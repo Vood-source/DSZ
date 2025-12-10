@@ -112,44 +112,49 @@ export function createScreenPeerConnection(userId) {
 
 // Создание видео элемента
 function createVideoElement(userId, stream, isScreen = false) {
-    const videoWrapper = document.createElement('div');
-    videoWrapper.className = 'video-wrapper';
+    const videoTile = document.createElement('div');
+    videoTile.className = 'video-tile';
 
     const videoElement = document.createElement('video');
-    videoElement.className = 'video-element';
     videoElement.srcObject = stream;
     videoElement.autoplay = true;
     videoElement.playsInline = true;
 
-    const label = document.createElement('div');
-    label.className = 'video-label';
-    label.textContent = isScreen ? 'Трансляция: ' + (state.users[userId]?.username || 'Пользователь') : (state.users[userId]?.username || 'Пользователь');
+    const username = state.users[userId]?.username || 'Пользователь';
+    const labelText = isScreen ? `Экран: ${username}` : username;
 
+    const overlay = document.createElement('div');
+    overlay.className = 'video-overlay';
+    
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'video-username';
+    nameLabel.textContent = labelText;
+    
     const fullscreenBtn = document.createElement('button');
-    fullscreenBtn.className = 'fullscreen-btn';
+    fullscreenBtn.className = 'btn-icon';
     fullscreenBtn.innerHTML = '⛶';
-    fullscreenBtn.title = 'Развернуть на весь экран';
+    fullscreenBtn.title = 'На весь экран';
+    fullscreenBtn.style.color = 'white';
     fullscreenBtn.addEventListener('click', () => toggleFullscreen(videoElement));
 
-    const controls = document.createElement('div');
-    controls.className = 'video-controls';
-    controls.appendChild(label);
-    controls.appendChild(fullscreenBtn);
+    overlay.appendChild(nameLabel);
+    overlay.appendChild(fullscreenBtn);
 
-    videoWrapper.appendChild(videoElement);
-    videoWrapper.appendChild(controls);
+    videoTile.appendChild(videoElement);
+    videoTile.appendChild(overlay);
 
     if (isScreen) {
-        const screenIndicator = document.createElement('div');
-        screenIndicator.className = 'screen-share-indicator';
-        screenIndicator.textContent = 'ЭКРАН';
-        videoWrapper.appendChild(screenIndicator);
-        state.videoElements[userId + '_screen'] = videoWrapper;
+        state.videoElements[userId + '_screen'] = videoTile;
     } else {
-        state.videoElements[userId] = videoWrapper;
+        state.videoElements[userId] = videoTile;
     }
 
-    elements.videoContainer.appendChild(videoWrapper);
+    // Показываем контейнер видео, если он скрыт
+    if (elements.videoContainer.classList.contains('hidden')) {
+        elements.videoContainer.classList.remove('hidden');
+    }
+
+    elements.videoContainer.appendChild(videoTile);
 
     stream.getVideoTracks().forEach(track => {
         track.onended = () => {
@@ -163,6 +168,11 @@ function deleteVideoElement(key) {
     if (state.videoElements[key]) {
         elements.videoContainer.removeChild(state.videoElements[key]);
         delete state.videoElements[key];
+    }
+    
+    // Если видео больше нет, скрываем контейнер
+    if (elements.videoContainer.children.length === 0) {
+        elements.videoContainer.classList.add('hidden');
     }
 }
 
