@@ -20,6 +20,7 @@ async function getUsersInRoom(roomId) {
 async function getActiveRooms() {
     if (!db) return [];
     try {
+        // Получаем комнаты и количество пользователей
         const rooms = await db.all(`
             SELECT r.id, r.created_at as createdAt, COUNT(u.socket_id) as userCount
             FROM rooms r
@@ -27,14 +28,34 @@ async function getActiveRooms() {
             GROUP BY r.id
         `);
 
-        // Для каждой комнаты получаем список аватаров пользователей
-        for (const room of rooms) {
-            if (room.userCount > 0) {
-                const users = await db.all('SELECT avatar, username FROM users WHERE room_id = ? LIMIT 5', room.id);
-                room.users = users;
-            } else {
-                room.users = [];
-            }
+        // Если комнат нет, возвращаем пустой массив
+        if (rooms.length === 0) return [];
+
+        // Получаем пользователей для всех комнат одним запросом
+        // Ограничиваем количество пользователей на клиенте или здесь, если нужно
+        // В SQLite нет простого способа сделать LIMIT внутри GROUP BY или PARTITION BY без оконных функций
+        // Поэтому получим всех пользователей активных комнат и сгруппируем в JS
+        const roomIds = rooms.map(r => `'${r.id}'`).join(',');
+        if (roomIds) {
+            const allUsers = await db.all(`SELECT room_id, avatar, username FROM users WHERE room_id IN (${roomIds})`);
+            
+            // Группируем пользователей по комнатам
+            const usersByRoom = {};
+            allUsers.forEach(user => {
+                if (!usersByRoom[user.room_id]) {
+                    usersByRoom[user.room_id] = [];
+                }
+                if (usersByRoom[user.room_id].length < 5) { // Ограничиваем до 5 аватаров
+                    usersByRoom[user.room_id].push({ avatar: user.avatar, username: user.username });
+                }
+            });
+
+            // Добавляем пользователей к комнатам
+            rooms.forEach(room => {
+                room.users = usersByRoom[room.id] || [];
+            });
+        } else {
+            rooms.forEach(room => room.users = []);
         }
 
         return rooms;

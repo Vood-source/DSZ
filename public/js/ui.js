@@ -201,18 +201,29 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Обновление списка комнат
+// Обновление списка комнат (оптимизированное)
 export function updateRoomList(rooms, joinRoomCallback) {
     const channelsContainer = elements.voiceChannelsElement;
     const createBtn = document.getElementById('create-room');
     
-    channelsContainer.innerHTML = '';
-    if (createBtn) channelsContainer.appendChild(createBtn);
+    // Получаем текущие элементы комнат
+    const existingRooms = Array.from(channelsContainer.querySelectorAll('.channel'));
+    const existingRoomIds = existingRooms.map(el => el.dataset.roomId).filter(Boolean);
+    const newRoomIds = rooms.map(r => r.id);
 
+    // Удаляем комнаты, которых больше нет
+    existingRooms.forEach(el => {
+        const id = el.dataset.roomId;
+        if (id && !newRoomIds.includes(id)) {
+            el.remove();
+        }
+    });
+
+    // Добавляем или обновляем комнаты
     rooms.forEach(room => {
-        const roomElement = document.createElement('div');
-        roomElement.className = 'channel';
+        let roomElement = channelsContainer.querySelector(`.channel[data-room-id="${room.id}"]`);
         
+        // Генерация HTML для пользователей
         let usersHtml = '';
         if (room.users && room.users.length > 0) {
             usersHtml = '<div class="channel-users">';
@@ -222,27 +233,45 @@ export function updateRoomList(rooms, joinRoomCallback) {
             usersHtml += '</div>';
         }
 
-        roomElement.innerHTML = `
+        const innerHTML = `
             <div class="channel-info">
                 <span class="channel-icon">🔊</span>
                 <span class="channel-name">Комната ${room.id.substring(0, 8)}</span>
             </div>
             ${usersHtml}
         `;
-        
-        roomElement.addEventListener('click', (e) => {
-            // Предотвращаем переход, если кликнули на аватар (опционально)
-            if (state.roomId !== room.id) {
-                joinRoomCallback(room.id);
+
+        if (!roomElement) {
+            // Создаем новую комнату
+            roomElement = document.createElement('div');
+            roomElement.className = 'channel';
+            roomElement.dataset.roomId = room.id;
+            roomElement.innerHTML = innerHTML;
+            
+            roomElement.addEventListener('click', () => {
+                if (state.roomId !== room.id) {
+                    joinRoomCallback(room.id);
+                }
+            });
+
+            if (createBtn) {
+                channelsContainer.insertBefore(roomElement, createBtn);
+            } else {
+                channelsContainer.appendChild(roomElement);
             }
-        });
-        
-        roomElement.dataset.roomId = room.id;
-        if (state.roomId === room.id) {
-            roomElement.classList.add('active');
+        } else {
+            // Обновляем существующую комнату только если содержимое изменилось
+            if (roomElement.innerHTML !== innerHTML) {
+                roomElement.innerHTML = innerHTML;
+            }
         }
 
-        channelsContainer.insertBefore(roomElement, createBtn);
+        // Обновляем активный класс
+        if (state.roomId === room.id) {
+            roomElement.classList.add('active');
+        } else {
+            roomElement.classList.remove('active');
+        }
     });
 }
 
